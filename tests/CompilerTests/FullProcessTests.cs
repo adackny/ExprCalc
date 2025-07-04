@@ -18,7 +18,7 @@ public class FullProcessTests
             R := num + 3.5
             """;
 
-        var lexer = new Scanner(program);
+        var lexer = new Lexer(program);
         var symbolsTable = new SymbolsTable([]);
         var parser = new Parser(lexer, symbolsTable);
         var ast = parser.Parse();
@@ -65,7 +65,7 @@ public class FullProcessTests
             new ExternalVariableSymbol("P2", SymbolsTable.Number, 0m),
             new ExternalVariableSymbol("P3", SymbolsTable.Number, 0m),
         });
-        var parser = new Parser(new Scanner(program), symbolsTable);
+        var parser = new Parser(new Lexer(program), symbolsTable);
 
         var ast = parser.Parse();
         var typeChecker = new TypeChecker(symbolsTable, program);

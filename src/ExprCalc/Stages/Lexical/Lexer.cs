@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ExprCalc.Stages.Lexical
 {
-    public class Scanner
+    public class Lexer
     {
         private readonly string _input;
         private int _currentPosition;
@@ -19,7 +19,7 @@ namespace ExprCalc.Stages.Lexical
         };
 
 
-        public Scanner(string input)
+        public Lexer(string input)
         {
             _input = input;
             _startState = new State("start", TokenType.INVALID);

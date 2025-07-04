@@ -12,7 +12,7 @@ namespace ExprCalc
 {
     public class Engine
     {
-        private readonly Scanner _scanner;
+        private readonly Lexer _scanner;
         private readonly Parser _parser;
         private readonly TypeChecker _typeChecker;
         private readonly CodeGenerator _codeGenerator;
@@ -22,7 +22,7 @@ namespace ExprCalc
         public Engine(string input, List<Symbol> builtInSymbols)
         {
             var symbolsTable = new SymbolsTable(builtInSymbols);
-            _scanner = new Scanner(input);
+            _scanner = new Lexer(input);
             _parser = new Parser(_scanner, symbolsTable);
             _typeChecker = new TypeChecker(symbolsTable, input);
             _codeGenerator = new CodeGenerator(symbolsTable);

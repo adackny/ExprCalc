@@ -1,7 +1,7 @@
 
 NO TOCAR!!
 <expressionsProgram> -> <expression>* Eof
-<expression> -> <orExpr> ':=' <orExpr>
+<expression> -> NAME ':=' <orExpr> | <orExpr>
 
 <orExpr> -> <andExpr> ('OR' <andExpr>)*
 <andExpr> -> <comparisonExpr> ('AND' <comparisonExpr>)*

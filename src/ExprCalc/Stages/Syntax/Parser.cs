@@ -10,11 +10,11 @@ namespace ExprCalc.Stages.Syntax
 {
     public class Parser
     {
-        private readonly Scanner _input;
+        private readonly Lexer _input;
         private readonly CircularBuffer<Token> _lookahead = new CircularBuffer<Token>(2);
         private readonly SymbolsTable _symbolsTable;
 
-        public Parser(Scanner input, SymbolsTable symbolsTable)
+        public Parser(Lexer input, SymbolsTable symbolsTable)
         {
             _input = input;
             _symbolsTable = symbolsTable;

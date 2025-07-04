@@ -16,7 +16,7 @@ public class ParserTests
             r := p1 + p2
             """;
 
-        var parser = new Parser(new Scanner(text), new SymbolsTable([]));
+        var parser = new Parser(new Lexer(text), new SymbolsTable([]));
 
         AstNode program = parser.Parse();
         Assert.Empty(parser.Errors);
@@ -29,7 +29,7 @@ public class ParserTests
             r := p1 +
             """;
 
-        var parser = new Parser(new Scanner(text), new SymbolsTable([]));
+        var parser = new Parser(new Lexer(text), new SymbolsTable([]));
 
         AstNode program = parser.Parse();
 
@@ -48,7 +48,7 @@ public class ParserTests
             p1 + Asd(Qwe,)
             """;
 
-        var parser = new Parser(new Scanner(text), new SymbolsTable([]));
+        var parser = new Parser(new Lexer(text), new SymbolsTable([]));
 
         AstNode program = parser.Parse();
 
@@ -68,7 +68,7 @@ public class ParserTests
             123, := 123
             """;
 
-        var parser = new Parser(new Scanner(text), new SymbolsTable([]));
+        var parser = new Parser(new Lexer(text), new SymbolsTable([]));
 
         AstNode program = parser.Parse();
 
@@ -87,7 +87,7 @@ public class ParserTests
             a := "Hello"
             """;
 
-        var parser = new Parser(new Scanner(text), new SymbolsTable([]));
+        var parser = new Parser(new Lexer(text), new SymbolsTable([]));
 
         AstNode program = parser.Parse();
         Assert.Empty(parser.Errors);

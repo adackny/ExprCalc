@@ -2,14 +2,14 @@
 
 namespace CompilerTests;
 
-public class UnitTest1
+public class LexerTests
 {
     [Fact]
     public void TestNamesAndNumbers()
     {
         string text = "Hello 123asd1 456.7";
 
-        var scanner = new Scanner(text);
+        var scanner = new Lexer(text);
         var helloToken = scanner.NextToken();
         var number123Token = scanner.NextToken();
         var asd1Token = scanner.NextToken();
@@ -33,7 +33,7 @@ public class UnitTest1
     {
         string text = "Hello \"123asd1\" \"456.7\"";
 
-        var scanner = new Scanner(text);
+        var scanner = new Lexer(text);
         var helloToken = scanner.NextToken();
         var string123asd1Token = scanner.NextToken();
         var string456_7Token = scanner.NextToken();
@@ -65,7 +65,7 @@ public class UnitTest1
             (TokenType.EOF, ""),
         };
 
-        var scanner = new Scanner(text);
+        var scanner = new Lexer(text);
 
         foreach (var (kind, lex) in expected)
         {
@@ -101,7 +101,7 @@ public class UnitTest1
             (TokenType.EOF, ""),
         };
 
-        var scanner = new Scanner(text);
+        var scanner = new Lexer(text);
 
         foreach (var (kind, lex) in expected)
         {
@@ -146,7 +146,7 @@ public class UnitTest1
             (TokenType.EOF, ""),
         };
 
-        var scanner = new Scanner(text);
+        var scanner = new Lexer(text);
 
         foreach (var (kind, lex) in expected)
         {
@@ -201,7 +201,7 @@ public class UnitTest1
             (TokenType.EOF, ""),
         };
         
-        var scanner = new Scanner(text);
+        var scanner = new Lexer(text);
 
         foreach (var (kind, lex) in expected)
         {
