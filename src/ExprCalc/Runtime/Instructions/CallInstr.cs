@@ -9,7 +9,7 @@ namespace ExprCalc.Runtime.Instructions
 
         public override void Exec()
         {
-            var addr = _interpreter.Code[_interpreter.Counter + 1].Value;
+            var addr = (byte)(_interpreter.Code[_interpreter.Counter].Value & 0x00FF);
 
             var fn = _interpreter.ConstPool[addr] as ExternalFunctionSymbol;
             var args = new List<object>();
@@ -18,7 +18,7 @@ namespace ExprCalc.Runtime.Instructions
             var ret = fn.Call(args);
             _interpreter.Operands.Push(ret);
 
-            _interpreter.Counter += 2;
+            _interpreter.Counter++;
         }
     }
 }

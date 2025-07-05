@@ -14,8 +14,8 @@ namespace ExprCalc.Runtime.Instructions
 
         public override void Exec()
         {
-            var variant = _interpreter.Code[_interpreter.Counter].Value;
-            var address = _interpreter.Code[_interpreter.Counter + 1].Value;
+            var variant = (byte)(_interpreter.Code[_interpreter.Counter].Value >> 8);
+            var address = (byte)(_interpreter.Code[_interpreter.Counter].Value & 0x00FF);
 
             var cond = false;
 
@@ -37,7 +37,7 @@ namespace ExprCalc.Runtime.Instructions
             if (cond)
                 _interpreter.Counter = address;
             else
-                _interpreter.Counter += 2;
+                _interpreter.Counter++;
         }
     }
 }

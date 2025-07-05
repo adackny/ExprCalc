@@ -15,7 +15,7 @@ namespace ExprCalc.Runtime.Instructions
 
         public override void Exec()
         {
-            var variant = _interpreter.Code[_interpreter.Counter].Value;
+            var variant = (byte)(_interpreter.Code[_interpreter.Counter].Value >> 8);
 
             switch (variant)
             {
@@ -32,10 +32,14 @@ namespace ExprCalc.Runtime.Instructions
                     Push(Pop<decimal>() / Pop<decimal>());
                     break;
                 case AND:
-                    Push(Pop<bool>() && Pop<bool>());
+                    var left = Pop<decimal>();
+                    var right = Pop<decimal>();
+                    Push(left > 0 && right > 0);
                     break;
                 case OR:
-                    Push(Pop<bool>() || Pop<bool>());
+                    left = Pop<decimal>();
+                    right = Pop<decimal>();
+                    Push(left > 0 || right > 0);
                     break;
                 default:
                     throw new Exception($"Error in binary_op. Unknown instruction: {variant:X2}");

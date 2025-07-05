@@ -43,7 +43,6 @@ public class CodeGenTests
         var codeGen = new CodeGenerator(symbolsTable);
         program.Accept(codeGen);
 
-        Assert.Equal(new ByteCode(true, Opcodes.LOADC), codeGen.Code[0]);
-        Assert.Equal(new ByteCode(false, 0), codeGen.Code[1]);
+        Assert.Equal(OpcodesBuilder.LOADC(0), codeGen.Code[0]);
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ExprCalc.Runtime;
 using ExprCalc.Stages.Lexical;
@@ -15,20 +14,19 @@ namespace ExprCalc.Stages.CodeGen
         private readonly List<object> _memory = new List<object>();
         private readonly SymbolsTable _symbolsTable;
 
-        private readonly Dictionary<TokenType, ByteCode> _binaryOperatorsOpcodes = new Dictionary<TokenType, ByteCode>
+        private readonly Dictionary<TokenType, ushort> _binaryOperatorsOpcodes = new Dictionary<TokenType, ushort>
         {
-            { TokenType.PLUS, new ByteCode(true, Opcodes.ADD) },
-            { TokenType.MINUS, new ByteCode(true, Opcodes.SUB) },
-            { TokenType.STAR, new ByteCode(true, Opcodes.MUL) },
-            { TokenType.AND, new ByteCode(true, Opcodes.AND) },
-            { TokenType.OR, new ByteCode(true, Opcodes.OR) },
-            { TokenType.ASSIGN, new ByteCode(true, Opcodes.STORE) }
+            { TokenType.PLUS, OpcodesBuilder.ADD() },
+            { TokenType.MINUS, OpcodesBuilder.SUB() },
+            { TokenType.STAR, OpcodesBuilder.MUL() },
+            { TokenType.AND, OpcodesBuilder.AND() },
+            { TokenType.OR, OpcodesBuilder.OR() },
         };
 
-        private readonly Dictionary<TokenType, ByteCode> _unaryOperatorsOpcodes = new Dictionary<TokenType, ByteCode>
+        private readonly Dictionary<TokenType, ushort> _unaryOperatorsOpcodes = new Dictionary<TokenType, ushort>
         {
-            { TokenType.MINUS, new ByteCode(true, Opcodes.NEG) },
-            { TokenType.NOT, new ByteCode(true, Opcodes.NOT) }
+            { TokenType.MINUS, OpcodesBuilder.NEG() },
+            { TokenType.NOT, OpcodesBuilder.NOT() }
         };
 
         public CodeGenerator(SymbolsTable symbolsTable)
@@ -59,8 +57,7 @@ namespace ExprCalc.Stages.CodeGen
                     _memory.Add(null);
             }
 
-            _code.Add(new ByteCode(true, Opcodes.STORE));
-            _code.Add(new ByteCode(false, symbol.Address.Value));
+            _code.Add(OpcodesBuilder.STORE(symbol.Address.Value));
 
             return assignExpr;
         }
@@ -86,8 +83,7 @@ namespace ExprCalc.Stages.CodeGen
                 _constPool.Add(symbol);
             }
 
-            _code.Add(new ByteCode(true, Opcodes.CALL));
-            _code.Add(new ByteCode(false, symbol.ConstPoolIndex.Value));
+            _code.Add(OpcodesBuilder.CALL(symbol.ConstPoolIndex.Value));
 
             return callExpr;
         }
@@ -101,8 +97,7 @@ namespace ExprCalc.Stages.CodeGen
                 _constPool.Add(symbol.Value);
             }
 
-            _code.Add(new ByteCode(true, Opcodes.LOADC));
-            _code.Add(new ByteCode(false, symbol.ConstPoolIndex.Value));
+            _code.Add(OpcodesBuilder.LOADC(symbol.ConstPoolIndex.Value));
 
             return constant;
         }
@@ -116,8 +111,7 @@ namespace ExprCalc.Stages.CodeGen
                 _constPool.Add(symbol.Value);
             }
 
-            _code.Add(new ByteCode(true, Opcodes.LOADC));
-            _code.Add(new ByteCode(false, symbol.ConstPoolIndex.Value));
+            _code.Add(OpcodesBuilder.LOADC(symbol.ConstPoolIndex.Value));
 
             return constant;
         }
@@ -127,7 +121,7 @@ namespace ExprCalc.Stages.CodeGen
             foreach (var expr in program.Expressions)
                 expr.Accept(this);
 
-            _code.Add(new ByteCode(true, Opcodes.HALT));
+            _code.Add(OpcodesBuilder.HALT());
             return program;
         }
 
@@ -147,14 +141,12 @@ namespace ExprCalc.Stages.CodeGen
                 externalVariableSymbol.Address = (byte)_constPool.Count;
                 _constPool.Add(externalVariableSymbol.Value);
 
-                _code.Add(new ByteCode(true, Opcodes.LOADC));
-                _code.Add(new ByteCode(false, symbol.Address.Value));
+                _code.Add(OpcodesBuilder.LOADC(symbol.Address.Value));
 
                 return variable;
             }
 
-            _code.Add(new ByteCode(true, Opcodes.LOAD));
-            _code.Add(new ByteCode(false, symbol.Address.Value));
+            _code.Add(OpcodesBuilder.LOAD(symbol.Address.Value));
 
             return variable;
         }

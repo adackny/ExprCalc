@@ -40,44 +40,49 @@ namespace ExprCalc.Runtime
 
         public void Run()
         {
-            byte bytecode = (byte)(Code[Counter].Value & 0xF0);
+            byte bytecode = (byte)(Code[Counter].Value >> 8 & 0xF0);
             while (bytecode != PrimitiveOpcodes.HALT && Counter < Code.Count)
             {
                 var instr = _instructions[bytecode];
                 instr.Exec();
-                bytecode = (byte)(Code[Counter].Value & 0xF0);
+                bytecode = (byte)(Code[Counter].Value >> 8 & 0xF0);
             }
         }
     }
 
     public struct ByteCode
     {
-        public readonly bool _isOpcode;
-        private readonly byte value;
+        private readonly ushort _value;
 
-        public ByteCode(bool isOpcode, byte value)
-        {
-            _isOpcode = isOpcode;
-            this.value = value;
-        }
+        public ByteCode(ushort value) => _value = value;
 
-        public byte Value => value;
+        public ushort Value => _value;
+
+        public static implicit operator ByteCode(ushort s) => new ByteCode(s);
 
         public override string ToString()
         {
-            if (_isOpcode)
+            var opcodeVariant = (byte)((_value & 0xFF00) >> 8);
+            var opcode = (byte)(opcodeVariant & 0xF0);
+            var addr = (byte)(_value & 0x00FF);
+
+            var opcodesType = typeof(Opcodes);
+            var constFields = opcodesType.GetFields(
+                BindingFlags.Public |
+                BindingFlags.Static);
+
+            var field = constFields.First(fld => (byte)fld.GetValue(null) == opcodeVariant);
+
+            switch (opcode)
             {
-                var opcodesType = typeof(Opcodes);
-                var constFields = opcodesType.GetFields(
-                    BindingFlags.Public |
-                    BindingFlags.Static);
-
-                var byteValue = value;
-
-                var field = constFields.First(fld => (byte)fld.GetValue(null) == byteValue);
-                return field.Name;
+                case PrimitiveOpcodes.LOAD:
+                case PrimitiveOpcodes.STORE:
+                case PrimitiveOpcodes.BRANCH:
+                case PrimitiveOpcodes.CALL:
+                    return $"<{field.Name}, {addr:X2}>";
+                default:
+                    return $"<{field.Name}>";
             }
-            return value.ToString();
         }
     }
 }
