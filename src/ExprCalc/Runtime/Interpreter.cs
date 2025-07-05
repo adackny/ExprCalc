@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using ExprCalc.Runtime.Instructions;
 
 namespace ExprCalc.Runtime
@@ -22,12 +24,12 @@ namespace ExprCalc.Runtime
         }
 
         public int Counter { get; set; }
-        public List<byte> Code { get; private set; }
+        public List<ByteCode> Code { get; private set; }
         public Stack<object> Operands { get; private set; }
         public List<object> Memory { get; private set; }
         public List<object> ConstPool { get; private set; }
 
-        public void Load(List<byte> code, List<object> memory, List<object> constPool)
+        public void Load(List<ByteCode> code, List<object> memory, List<object> constPool)
         {
             Code = code;
             Operands = new Stack<object>();
@@ -38,13 +40,44 @@ namespace ExprCalc.Runtime
 
         public void Run()
         {
-            byte bytecode = (byte)(Code[Counter] & 0xF0);
+            byte bytecode = (byte)(Code[Counter].Value & 0xF0);
             while (bytecode != PrimitiveOpcodes.HALT && Counter < Code.Count)
             {
                 var instr = _instructions[bytecode];
                 instr.Exec();
-                bytecode = (byte)(Code[Counter] & 0xF0);
+                bytecode = (byte)(Code[Counter].Value & 0xF0);
             }
+        }
+    }
+
+    public struct ByteCode
+    {
+        public readonly bool _isOpcode;
+        private readonly byte value;
+
+        public ByteCode(bool isOpcode, byte value)
+        {
+            _isOpcode = isOpcode;
+            this.value = value;
+        }
+
+        public byte Value => value;
+
+        public override string ToString()
+        {
+            if (_isOpcode)
+            {
+                var opcodesType = typeof(Opcodes);
+                var constFields = opcodesType.GetFields(
+                    BindingFlags.Public |
+                    BindingFlags.Static);
+
+                var byteValue = value;
+
+                var field = constFields.First(fld => (byte)fld.GetValue(null) == byteValue);
+                return field.Name;
+            }
+            return value.ToString();
         }
     }
 }

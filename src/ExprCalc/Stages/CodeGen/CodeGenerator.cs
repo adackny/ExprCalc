@@ -10,25 +10,25 @@ namespace ExprCalc.Stages.CodeGen
 {
     public class CodeGenerator : IVisitor<AstNode>
     {
-        private readonly List<byte> _code = new List<byte>();
+        private readonly List<ByteCode> _code = new List<ByteCode>();
         private readonly List<object> _constPool = new List<object>();
-        private readonly List<object> _data = new List<object>();
+        private readonly List<object> _memory = new List<object>();
         private readonly SymbolsTable _symbolsTable;
 
-        private readonly Dictionary<TokenType, byte> _binaryOperatorsOpcodes = new Dictionary<TokenType, byte>
+        private readonly Dictionary<TokenType, ByteCode> _binaryOperatorsOpcodes = new Dictionary<TokenType, ByteCode>
         {
-            { TokenType.PLUS, Opcodes.ADD },
-            { TokenType.MINUS, Opcodes.SUB },
-            { TokenType.STAR, Opcodes.MUL },
-            { TokenType.AND, Opcodes.AND },
-            { TokenType.OR, Opcodes.OR },
-            { TokenType.ASSIGN, Opcodes.STORE }
+            { TokenType.PLUS, new ByteCode(true, Opcodes.ADD) },
+            { TokenType.MINUS, new ByteCode(true, Opcodes.SUB) },
+            { TokenType.STAR, new ByteCode(true, Opcodes.MUL) },
+            { TokenType.AND, new ByteCode(true, Opcodes.AND) },
+            { TokenType.OR, new ByteCode(true, Opcodes.OR) },
+            { TokenType.ASSIGN, new ByteCode(true, Opcodes.STORE) }
         };
 
-        private readonly Dictionary<TokenType, byte> _unaryOperatorsOpcodes = new Dictionary<TokenType, byte>
+        private readonly Dictionary<TokenType, ByteCode> _unaryOperatorsOpcodes = new Dictionary<TokenType, ByteCode>
         {
-            { TokenType.MINUS, Opcodes.NEG },
-            { TokenType.NOT, Opcodes.NOT }
+            { TokenType.MINUS, new ByteCode(true, Opcodes.NEG) },
+            { TokenType.NOT, new ByteCode(true, Opcodes.NOT) }
         };
 
         public CodeGenerator(SymbolsTable symbolsTable)
@@ -36,29 +36,42 @@ namespace ExprCalc.Stages.CodeGen
             _symbolsTable = symbolsTable;
         }
 
-        public List<byte> Code => _code;
-        public List<object> Data => _data;
+        public List<ByteCode> Code => _code;
+        public List<object> Data => _memory;
         public List<object> ConstPool => _constPool;
 
-        public AstNode VisitBinaryOperator(BinaryExpr binaryOperator)
+        public AstNode VisitAssignExpr(AssignExpr assignExpr)
         {
-            if (binaryOperator.Operator.TokenType == TokenType.ASSIGN)
+            assignExpr.Right.Accept(this);
+
+            var lvalue = assignExpr.Left as VariableExpr;
+            var symbol = _symbolsTable.Resolve(lvalue.Name.Lexeme) as VariableSymbol;
+
+            if (symbol.Address == null)
             {
-                binaryOperator.Right.Accept(this);
-                VariableReferenceExpr variable = binaryOperator.Left.Accept(this) as VariableReferenceExpr;
+                symbol.Address = (byte)_memory.Count;
 
-                _code.Add(Opcodes.STORE);
-                var symbol = _symbolsTable.Resolve(variable.Name.Lexeme) as VariableSymbol;
-                AddImm2Bytes(symbol.Address);
-
-                return binaryOperator;
+                if (symbol.Type.Name == SymbolsTable.Number.Name)
+                    _memory.Add(new decimal(0));
+                else if (symbol.Type.Name == SymbolsTable.String.Name)
+                    _memory.Add(string.Empty);
+                else
+                    _memory.Add(null);
             }
 
-            binaryOperator.Left.Accept(this);
-            binaryOperator.Right.Accept(this);
-            _code.Add(_binaryOperatorsOpcodes[binaryOperator.Operator.TokenType]);
+            _code.Add(new ByteCode(true, Opcodes.STORE));
+            _code.Add(new ByteCode(false, symbol.Address.Value));
 
-            return binaryOperator;
+            return assignExpr;
+        }
+
+        public AstNode VisitBinaryExpr(BinaryExpr binaryExpr)
+        {
+            binaryExpr.Left.Accept(this);
+            binaryExpr.Right.Accept(this);
+            _code.Add(_binaryOperatorsOpcodes[binaryExpr.Operator.TokenType]);
+
+            return binaryExpr;
         }
 
         public AstNode VisitCallExpr(CallExpr callExpr)
@@ -66,16 +79,15 @@ namespace ExprCalc.Stages.CodeGen
             foreach (var arg in callExpr.Arguments)
                 arg.Accept(this);
 
-            // agregar la funcion al const pool
             var symbol = _symbolsTable.Resolve(callExpr.FuncName.Lexeme) as ExternalFunctionSymbol;
-            if (symbol.Address == -1)
+            if (symbol.ConstPoolIndex == null)
             {
-                symbol.Address = (short)_constPool.Count;
+                symbol.ConstPoolIndex = (byte)_constPool.Count;
                 _constPool.Add(symbol);
             }
 
-            _code.Add(Opcodes.CALL);
-            AddImm2Bytes(symbol.Address);
+            _code.Add(new ByteCode(true, Opcodes.CALL));
+            _code.Add(new ByteCode(false, symbol.ConstPoolIndex.Value));
 
             return callExpr;
         }
@@ -83,14 +95,14 @@ namespace ExprCalc.Stages.CodeGen
         public AstNode VisitNumericConst(NumericConst constant)
         {
             var symbol = _symbolsTable.Resolve(constant.Value.Lexeme.ToString()) as ConstSymbol;
-            if (symbol.Address == -1)
+            if (symbol.ConstPoolIndex == null)
             {
-                symbol.Address = (short)_constPool.Count;
+                symbol.ConstPoolIndex = (byte)_constPool.Count;
                 _constPool.Add(symbol.Value);
             }
 
-            _code.Add(Opcodes.LOADC);
-            AddImm2Bytes(symbol.Address);
+            _code.Add(new ByteCode(true, Opcodes.LOADC));
+            _code.Add(new ByteCode(false, symbol.ConstPoolIndex.Value));
 
             return constant;
         }
@@ -98,14 +110,14 @@ namespace ExprCalc.Stages.CodeGen
         public AstNode VisitStringConst(StringConst constant)
         {
             var symbol = _symbolsTable.Resolve(constant.Value.Lexeme) as ConstSymbol;
-            if (symbol.Address == -1)
+            if (symbol.ConstPoolIndex == null)
             {
-                symbol.Address = (short)_constPool.Count;
+                symbol.ConstPoolIndex = (byte)_constPool.Count;
                 _constPool.Add(symbol.Value);
             }
 
-            _code.Add(Opcodes.LOADC);
-            AddImm2Bytes(symbol.Address);
+            _code.Add(new ByteCode(true, Opcodes.LOADC));
+            _code.Add(new ByteCode(false, symbol.ConstPoolIndex.Value));
 
             return constant;
         }
@@ -115,15 +127,15 @@ namespace ExprCalc.Stages.CodeGen
             foreach (var expr in program.Expressions)
                 expr.Accept(this);
 
-            _code.Add(Opcodes.HALT);
+            _code.Add(new ByteCode(true, Opcodes.HALT));
             return program;
         }
 
-        public AstNode VisitUnaryOperator(UnaryExpr unaryOperator)
+        public AstNode VisitUnaryExpr(UnaryExpr unaryExpr)
         {
-            unaryOperator.Operand.Accept(this);
-            _code.Add(_unaryOperatorsOpcodes[unaryOperator.Operator.TokenType]);
-            return unaryOperator;
+            unaryExpr.Operand.Accept(this);
+            _code.Add(_unaryOperatorsOpcodes[unaryExpr.Operator.TokenType]);
+            return unaryExpr;
         }
 
         public AstNode VisitVariable(VariableExpr variable)
@@ -132,44 +144,19 @@ namespace ExprCalc.Stages.CodeGen
 
             if (symbol is ExternalVariableSymbol externalVariableSymbol)
             {
-                externalVariableSymbol.Address = (short)_constPool.Count;
+                externalVariableSymbol.Address = (byte)_constPool.Count;
                 _constPool.Add(externalVariableSymbol.Value);
 
-                _code.Add(Opcodes.LOADC);
-                AddImm2Bytes(symbol.Address);
+                _code.Add(new ByteCode(true, Opcodes.LOADC));
+                _code.Add(new ByteCode(false, symbol.Address.Value));
 
                 return variable;
             }
 
-            _code.Add(Opcodes.LOAD);
-            AddImm2Bytes(symbol.Address);
+            _code.Add(new ByteCode(true, Opcodes.LOAD));
+            _code.Add(new ByteCode(false, symbol.Address.Value));
 
             return variable;
-        }
-
-        public AstNode VisitVariableReference(VariableReferenceExpr variable)
-        {
-            var symbol = _symbolsTable.Resolve(variable.Name.Lexeme) as VariableSymbol;
-            if (symbol.Address == -1)
-            {
-                symbol.Address = (short)_data.Count;
-                if (symbol.Type.Equals(SymbolsTable.Number))
-                {
-                    _data.Add(new decimal(0));
-                }
-                else if (symbol.Type.Equals(SymbolsTable.String))
-                {
-                    _data.Add(string.Empty);
-                }
-            }
-
-            return variable;
-        }
-        
-        private void AddImm2Bytes(short imm)
-        {
-            _code.Add((byte)((imm & 0xFF00) >> 8));
-            _code.Add((byte)(imm & 0x00FF));
         }
     }
 }

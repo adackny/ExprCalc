@@ -11,17 +11,17 @@ public class CodeGenTests
     [Fact]
     public void TestSimpleSum()
     {
-        var ARef = new VariableReferenceExpr(new Token(TokenType.NAME, "A", 0, 0));
+        var ARef = new VariableExpr(new Token(TokenType.NAME, "A", 0, 0));
         var Val = new NumericConst(new Token(TokenType.NUMBER, "2.4", 0, 0));
-        var assignment = new BinaryExpr(new Token(TokenType.ASSIGN, ":=", 0, 0), ARef, Val);
+        var assignment = new AssignExpr(new Token(TokenType.ASSIGN, ":=", 0, 0), ARef, Val);
 
         var A = new VariableExpr(new Token(TokenType.NAME, "A", 0, 0));
         var B = new NumericConst(new Token(TokenType.NUMBER, "3.5", 0, 0));
 
         var binaryExpr = new BinaryExpr(new Token(TokenType.PLUS, "+", 0, 0), A, B);
 
-        var RRef = new VariableReferenceExpr(new Token(TokenType.NAME, "R", 0, 0));
-        var resultAssign = new BinaryExpr(new Token(TokenType.ASSIGN, ":=", 0, 0), RRef, binaryExpr);
+        var RRef = new VariableExpr(new Token(TokenType.NAME, "R", 0, 0));
+        var resultAssign = new AssignExpr(new Token(TokenType.ASSIGN, ":=", 0, 0), RRef, binaryExpr);
 
         var program = new ExpressionsProgram();
         program.Add(assignment);
@@ -43,7 +43,7 @@ public class CodeGenTests
         var codeGen = new CodeGenerator(symbolsTable);
         program.Accept(codeGen);
 
-        Assert.Equal(Opcodes.LOADC, codeGen.Code[0]);
-        Assert.Equal(0, codeGen.Code[1]);
+        Assert.Equal(new ByteCode(true, Opcodes.LOADC), codeGen.Code[0]);
+        Assert.Equal(new ByteCode(false, 0), codeGen.Code[1]);
     }
 }

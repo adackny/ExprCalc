@@ -7,14 +7,27 @@ namespace ExprCalc.Cross
 {
     public class TokensCollector : IVisitor<List<Token>>
     {
-        public List<Token> VisitBinaryOperator(BinaryExpr binaryOperator)
+        public List<Token> VisitAssignExpr(AssignExpr assignExpr)
         {
             var tokens = new List<Token>();
 
-            var leftTokens = binaryOperator.Left.Accept(this);
-            var rightTokens = binaryOperator.Right.Accept(this);
+            var leftTokens = assignExpr.Left.Accept(this);
+            var rightTokens = assignExpr.Right.Accept(this);
             tokens.AddRange(leftTokens);
-            tokens.Add(binaryOperator.Operator);
+            tokens.Add(assignExpr.Operator);
+            tokens.AddRange(rightTokens);
+
+            return tokens;
+        }
+
+        public List<Token> VisitBinaryExpr(BinaryExpr binaryExpr)
+        {
+            var tokens = new List<Token>();
+
+            var leftTokens = binaryExpr.Left.Accept(this);
+            var rightTokens = binaryExpr.Right.Accept(this);
+            tokens.AddRange(leftTokens);
+            tokens.Add(binaryExpr.Operator);
             tokens.AddRange(rightTokens);
             return tokens;
         }
@@ -52,24 +65,19 @@ namespace ExprCalc.Cross
             return new List<Token> { constant.Value };
         }
 
-        public List<Token> VisitUnaryOperator(UnaryExpr unaryOperator)
+        public List<Token> VisitUnaryExpr(UnaryExpr unaryExpr)
         {
             var tokens = new List<Token>
             {
-                unaryOperator.Operator
+                unaryExpr.Operator
             };
 
-            tokens.AddRange(unaryOperator.Operand.Accept(this));
+            tokens.AddRange(unaryExpr.Operand.Accept(this));
 
             return tokens;
         }
 
         public List<Token> VisitVariable(VariableExpr variable)
-        {
-            return new List<Token> { variable.Name };
-        }
-
-        public List<Token> VisitVariableReference(VariableReferenceExpr variable)
         {
             return new List<Token> { variable.Name };
         }

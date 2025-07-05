@@ -1,10 +1,11 @@
+using System;
 using ExprCalc.Stages.Lexical;
 
 namespace ExprCalc.Trees.Abstract
 {
-    public class BinaryExpr : ExprNode
+    public class AssignExpr : ExprNode
     {
-        public BinaryExpr(Token op, ExprNode left, ExprNode right)
+        public AssignExpr(Token op, ExprNode left, ExprNode right)
         {
             Operator = op;
             Left = left;
@@ -15,6 +16,6 @@ namespace ExprCalc.Trees.Abstract
         public ExprNode Left { get; }
         public ExprNode Right { get; }
 
-        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitBinaryExpr(this);
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitAssignExpr(this);
     }
 }

@@ -56,7 +56,7 @@ namespace ExprCalc.Stages.Syntax
 
                 while (LA(0) != TokenType.EOF)
                 {
-                    program.Add(Expression());
+                    program.Add(Assign());
                 }
             }
             catch { }
@@ -64,21 +64,19 @@ namespace ExprCalc.Stages.Syntax
             return program;
         }
 
-        private ExprNode Expression()
+        private ExprNode Assign()
         {
-            if (LA(0) == TokenType.NAME && LA(1) == TokenType.ASSIGN)
+            var left = OrExpr();
+
+            if (LA(0) == TokenType.ASSIGN)
             {
-                var variableRefToken = LT(0);
-                var assignOperator = LT(1);
-                Consume(); // left variable expression
-                Consume(); // := token
-                _symbolsTable.Define(new VariableSymbol(variableRefToken.Lexeme, isDefined: true));
-                var variableReference = new VariableReferenceExpr(variableRefToken);
-                var expression = OrExpr();
-                return new BinaryExpr(assignOperator, variableReference, expression);
+                var op = LT(0);
+                Consume();
+                var right = OrExpr();
+                return new AssignExpr(op, left, right);
             }
 
-            return OrExpr();
+            return left;
         }
 
         private ExprNode OrExpr()
@@ -147,7 +145,7 @@ namespace ExprCalc.Stages.Syntax
         {
             ExprNode left = UnaryExpr();
 
-            while (LA(0) == TokenType.STAR || LA(0) == TokenType.DIV)
+            while (LA(0) == TokenType.STAR || LA(0) == TokenType.SLASH)
             {
                 var op = LT(0);
                 Consume();
@@ -194,7 +192,7 @@ namespace ExprCalc.Stages.Syntax
             else if (LA(0) == TokenType.OPEN_PAREN)
             {
                 Consume();
-                var expr = Expression();
+                var expr = Assign();
 
                 if (!Match(TokenType.CLOSE_PAREN))
                     AddError("Se esperaba )");
@@ -223,7 +221,7 @@ namespace ExprCalc.Stages.Syntax
                 if (args.Count > 0 && !Match(TokenType.COMMA))
                     AddError("Se esperaba ','");
 
-                var arg = Expression();
+                var arg = Assign();
                 args.Add(arg);
             }
 

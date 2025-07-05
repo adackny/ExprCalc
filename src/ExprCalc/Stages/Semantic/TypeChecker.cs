@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ExprCalc.Cross;
-using ExprCalc.Stages.Lexical;
 using ExprCalc.Symbols;
 using ExprCalc.Trees;
 using ExprCalc.Trees.Abstract;
@@ -31,24 +30,31 @@ namespace ExprCalc.Stages.Semantic
 
         public List<CompilerError> Errors => _errors;
 
-        public IType VisitBinaryOperator(BinaryExpr binaryOperator)
+        public IType VisitAssignExpr(AssignExpr assignExpr)
         {
-            var rightType = binaryOperator.Right.Accept(this);
-
-            if (binaryOperator.Operator.TokenType == TokenType.ASSIGN)
+            var lvalue = assignExpr.Left as VariableExpr;
+            if (lvalue == null)
             {
-                var variableRef = binaryOperator.Left as VariableReferenceExpr;
-                var variableSymbol = _symbolsTable.Resolve(variableRef.Name.Lexeme) as VariableSymbol;
-                variableSymbol.Type = (PrimitiveType)rightType;
-
-                return rightType;
+                AddError(assignExpr.Left,
+                    "La parte izquierda de una asignación debe ser una variable");
+                return SymbolsTable.Undefined;
             }
 
-            var leftType = binaryOperator.Left.Accept(this);
+            var rightType = assignExpr.Right.Accept(this);
+            var symbol = _symbolsTable.Resolve(lvalue.Name.Lexeme) as VariableSymbol;
+            symbol.Type = (PrimitiveType)rightType;
+
+            return rightType;
+        }
+
+        public IType VisitBinaryExpr(BinaryExpr binaryExpr)
+        {
+            var rightType = binaryExpr.Right.Accept(this);
+            var leftType = binaryExpr.Left.Accept(this);
 
             if (leftType.Name != rightType.Name)
             {
-                AddError(binaryOperator,
+                AddError(binaryExpr,
                     "Los tipos de datos no encajan.");
                 return SymbolsTable.Undefined;
             }
@@ -100,9 +106,9 @@ namespace ExprCalc.Stages.Semantic
             return constSymbol.Type;
         }
 
-        public IType VisitUnaryOperator(UnaryExpr unaryOperator)
+        public IType VisitUnaryExpr(UnaryExpr unaryExpr)
         {
-            var type = unaryOperator.Operand.Accept(this);
+            var type = unaryExpr.Operand.Accept(this);
             if (type == null)
             {
                 return SymbolsTable.Undefined;
@@ -115,16 +121,6 @@ namespace ExprCalc.Stages.Semantic
             var variableSymbol = _symbolsTable.Resolve(variable.Name.Lexeme) as VariableSymbol;
             var type = variableSymbol.Type;
 
-            if (type == null)
-                return SymbolsTable.Undefined;
-            return type;
-        }
-
-        public IType VisitVariableReference(VariableReferenceExpr variable)
-        {
-            var variableSymbol = _symbolsTable.Resolve(variable.Name.Lexeme) as VariableSymbol;
-            var type = variableSymbol.Type;
-            
             if (type == null)
                 return SymbolsTable.Undefined;
             return type;

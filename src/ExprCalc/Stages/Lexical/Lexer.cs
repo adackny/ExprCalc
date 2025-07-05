@@ -31,7 +31,7 @@ namespace ExprCalc.Stages.Lexical
             _startState.Transition(new State("add", TokenType.PLUS, true), (str, i) => str[i] == '+');
             _startState.Transition(new State("sub", TokenType.MINUS, true), (str, i) => str[i] == '-');
             _startState.Transition(new State("mult", TokenType.STAR, true), (str, i) => str[i] == '*');
-            _startState.Transition(new State("div", TokenType.DIV, true), (str, i) => str[i] == '/');
+            _startState.Transition(new State("div", TokenType.SLASH, true), (str, i) => str[i] == '/');
 
             _startState.Transition(new State("openParenthesis", TokenType.OPEN_PAREN, true), (str, i) => str[i] == '(');
             _startState.Transition(new State("closeParenthesis", TokenType.CLOSE_PAREN, true), (str, i) => str[i] == ')');

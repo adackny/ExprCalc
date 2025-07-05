@@ -2,7 +2,7 @@ namespace ExprCalc.Stages.Lexical
 {
     public enum TokenType
     {
-        EOF, INVALID, PLUS, MINUS, STAR, DIV, ASSIGN,
+        EOF, INVALID, PLUS, MINUS, STAR, SLASH, ASSIGN,
 
         EQUAL, UNEQUAL, LESS, GREATER, LESS_EQUAL, GREATER_EQUAL,
 

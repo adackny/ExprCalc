@@ -11,7 +11,7 @@ namespace ExprCalc.Runtime.Instructions
 
         public override void Exec()
         {
-            var variant = _interpreter.Code[_interpreter.Counter];
+            var variant = _interpreter.Code[_interpreter.Counter].Value;
 
             switch (variant)
             {

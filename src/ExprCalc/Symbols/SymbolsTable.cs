@@ -7,7 +7,6 @@ namespace ExprCalc.Symbols
         private readonly Dictionary<string, Symbol> _symbols = new Dictionary<string, Symbol>();
 
         public static PrimitiveType Number = new PrimitiveType("<number>");
-        public static PrimitiveType Boolean = new PrimitiveType("<boolean>");
         public static PrimitiveType String = new PrimitiveType("<string>");
         public static PrimitiveType Time = new PrimitiveType("<time>");
         public static PrimitiveType Undefined = new PrimitiveType("<undefined>");
@@ -23,7 +22,6 @@ namespace ExprCalc.Symbols
         private void DefineBuiltInTypes()
         {
             Define(Number);
-            Define(Boolean);
             Define(String);
             Define(Time);
             Define(Undefined);

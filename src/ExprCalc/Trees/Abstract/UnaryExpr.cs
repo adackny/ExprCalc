@@ -13,6 +13,6 @@ namespace ExprCalc.Trees.Abstract
         public Token Operator { get; }
         public ExprNode Operand { get; }
 
-        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitUnaryOperator(this);
+        public override T Accept<T>(IVisitor<T> visitor) => visitor.VisitUnaryExpr(this);
     }
 }

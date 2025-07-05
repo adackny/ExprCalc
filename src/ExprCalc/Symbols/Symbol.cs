@@ -21,30 +21,30 @@ namespace ExprCalc.Symbols
             Value = value;
         }
 
-        public short Address { get; set; } = -1;
+        public byte? ConstPoolIndex { get; set; }
         public PrimitiveType Type { get; }
         public object Value { get; }
     }
 
     public class VariableSymbol : Symbol
     {
-        public VariableSymbol(string name, bool isDefined = false) : base(name)
+        public VariableSymbol(string name, PrimitiveType type = null) : base(name)
         {
-            Name = name;
-            IsDefined = isDefined;
+            Type = type;
         }
 
         public PrimitiveType Type { get; set; }
-        public short Address { get; set; } = -1;
+        public byte? Address { get; set; }
         public bool IsDefined { get; set; }
     }
 
     public class ExternalVariableSymbol : VariableSymbol
     {
-        public ExternalVariableSymbol(string name, PrimitiveType type, object value) : base(name, true)
+        public ExternalVariableSymbol(string name, PrimitiveType type, object value) : base(name)
         {
             Type = type;
             Value = value;
+            IsDefined = true;
         }
 
         public object Value { get; }
@@ -61,7 +61,7 @@ namespace ExprCalc.Symbols
             _func = func;
         }
 
-        public short Address { get; set; } = -1;
+        public byte? ConstPoolIndex { get; set; }
         public FunctionType Type { get; }
 
         public object Call(List<object> args) => _func.Invoke(args);

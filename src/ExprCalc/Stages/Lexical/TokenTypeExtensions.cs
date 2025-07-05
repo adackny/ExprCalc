@@ -40,7 +40,7 @@ namespace ExprCalc.Stages.Lexical
                 case TokenType.PLUS:
                 case TokenType.MINUS:
                 case TokenType.STAR:
-                case TokenType.DIV:
+                case TokenType.SLASH:
                     return true;
                 default:
                     return false;

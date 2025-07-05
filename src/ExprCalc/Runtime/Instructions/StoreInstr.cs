@@ -6,11 +6,11 @@ namespace ExprCalc.Runtime.Instructions
 
         public override void Exec()
         {
-            var addr = Address2Bytes(_interpreter.Counter + 1);
+            var addr = _interpreter.Code[_interpreter.Counter + 1].Value;
             object value = Pop<object>();
 
             _interpreter.Memory[addr] = value;
-            _interpreter.Counter += 3;
+            _interpreter.Counter += 2;
         }
     }
 }
